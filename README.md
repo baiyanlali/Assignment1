@@ -1,6 +1,6 @@
 # Assignment 1: Bound Constrained Single Objective Numerical Optimization
 
-## Program 
+## Program for Assignment 1
 **Programming language: Matlab**
 
 **Project**
