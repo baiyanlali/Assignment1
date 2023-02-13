@@ -19,10 +19,3 @@
 **Remark:** 
 * You are not encouraged to add new files or folders. ***EA.m*** is the only file that you will submit. Feel free to define multiple functions inside the ***EA.m*** file.
 
-
-## Prohibition
-You will get 0 as mark for this assignment if any of the following cases happens:
-* You use other programming languages.
-* You don't respect the naming policy of files.
-* The report/program/presentation submission is delayed for 3 days (72 hours) or more.
-* Plagiarism.
