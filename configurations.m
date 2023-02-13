@@ -15,4 +15,4 @@ benchmarkInfo;
 configuration.numRuns=30;
 configuration.funcIndices=[1:10];%length(benchmark);
 configuration.budget=[300000, 300000, 300000, 300000, 3000000, 300000, ...
-    20000, 20000, 20000, 20000];
+    300000, 20000, 20000, 20000];
