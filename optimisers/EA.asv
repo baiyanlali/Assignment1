@@ -14,14 +14,14 @@ eval(sprintf('objective=@%s;',funcName)); % Do not delete this line
 
 dimension = n;
 lower_bound = lb;
-upper_bound = ub;
-T = nbEvaluation;
+upper_bound = up;
+T = 500000;
 nbGen = 0; % generation counter
 nbEval = 0; % evaluation counter
 bestSoFarFit = inf; % best-so-far fitness value
+bestSoFarSolution = NaN; % best-so-far solution
 bestx = 0;
-recordedAvgY = [];
-recordedBestY = 0;
+recordedAvg
 %% Below starting your code
 % Initialise a population
 mu = 30;% Population size
@@ -29,30 +29,35 @@ lambda = 30; % Offspring size
 recombination_weight = 0.4;
 population = rand(mu, dimension).*(upper_bound-lower_bound) + lower_bound;
 
-fitness = objective(population);
-
-recordedAvgY = [recordedAvgY, mean(fitness)];
-
+fitness = nan(mu, 1);
+Maxgen = floor(T/lambda);
+fitness_pop = nan(1,Maxgen);
+fitness_gen = nan(1,Maxgen);
 % Evaluate the initial population
 for i = 1:mu
-%     fitness(i) = objective(population(i,:));
+    fitness(i) = objective(population(i,:));
     if fitness(i) < bestSoFarFit
-        bestx = i;
-        recordedBestY = fitness(i);
         bestSoFarFit = fitness(i);
+        bestSoFarSolution = population(i,:);
     end
     nbEval = nbEval + 1;
 end
 nbGen = nbGen+1;
+fitness_gen(nbGen) = bestSoFarFit;
+fitness_pop(nbGen) = min(fitness);
 % Start the loop
 while (nbEval<T) % [QUESTION] this stopping condition is not perfect, why?
 % Reproduction (selection, crossver)
 %% Parent selection
-
+%% TODO: you can try different fitness scaling techniques
+% Scaled_fitness = simple_fitness_scaling(-fitness); % fitness scaling
 Scaled_fitness = quadratic_fitness(-fitness); % fitness scaling
-crossoverProb = RouletteWheel(Scaled_fitness);
+%% TODO: you should implement different parent selection schemes
+% crossoverProb = your_selection_scheme(your_parameters); % generate a probability distribution for selection
+% crossoverProb = RouletteWheel(Scaled_fitness);
+crossoverProb = RankBased(Scaled_fitness);
 offspring = nan(lambda, dimension);
-% offspring_fitness = nan(lambda, 1);
+offspring_fitness = nan(lambda, 1);
 for i = 1:lambda/2
     parentIndexes = nan(1,2);
     for j = 1:2
@@ -72,36 +77,33 @@ end
 %% Mutation
 mutation_rate = 1/dimension;
 for i = 1:lambda
+    % mutation method
     offspring(i,:) = Uniform_Mutation(offspring(i,:),mutation_rate, lower_bound, upper_bound);
+    offspring_fitness(i) = objective(offspring(i,:));
 end
-
-offspring_fitness = objective(offspring);
-
-recordedAvgY = [recordedAvgY, mean(offspring_fitness)];
 
 for i = 1:lambda
     if offspring_fitness(i) < bestSoFarFit
-        bestx = nbEval;
-        recordedBestY = fitness(i);
-        bestSoFarFit = fitness(i);
+        bestSoFarFit = offspring_fitness(i);
+        bestSoFarSolution = offspring(i,:);
     end
     nbEval = nbEval + 1;
 end
 %% Replacement(Survivor Selection)
-
-% Scaled_fitness_all = simple_fitness_scaling(-[fitness; offspring_fitness]);
-[~,sortedi] = sort(-[fitness; offspring_fitness],'descend');
+%% TODO: you can try different survivor selection schemes
+Scaled_fitness_all = simple_fitness_scaling(-[fitness; offspring_fitness]);
+[~,sortedi] = sort(Scaled_fitness_all,'descend');
 parent_survivors = sortedi(sortedi(1:mu)<=mu);
 offspring_survivors = sortedi(sortedi(1:mu)>mu)-mu;
 population = [population(parent_survivors,:); offspring(offspring_survivors,:) ];
 fitness = [fitness(parent_survivors); offspring_fitness(offspring_survivors)];
 
 nbGen = nbGen+1;
+fitness_gen(nbGen) = bestSoFarFit;
+fitness_pop(nbGen) = min(fitness);
 end
-
-
-
-end
+bestSoFarFit
+bestSoFarSolution
 
 %% Fuctions
 
@@ -135,17 +137,4 @@ function selected_parents = Tournament(parents, fitness, k)
     random_num = fitness(rand_selection);
     [~, I] = sort(random_num);
     selected_parents = [parents(rand_selection(I(end))), parents(rand_selection(I(end-1)))];
-end
-
-function [x] = Uniform_Mutation(x,mutation_rate,lower_bound,upper_bound)
-dimension = length(x);
-for i = 1:dimension
-    if rand<mutation_rate
-        x(i) = rand*(upper_bound-lower_bound) + lower_bound;
-    end
-end
-end
-
-function [fitness] = quadratic_fitness(x)
-fitness = sum(x.^2,2);
 end
